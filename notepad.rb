@@ -26,4 +26,4 @@ entry.read_from_console
 
 entry.save(current_path)
 
-puts 'Ура! Запись сохранена'
+puts 'Ура! Запись сохранена.'
