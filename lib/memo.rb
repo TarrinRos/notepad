@@ -18,4 +18,9 @@ class Memo < Post
 
     @text.unshift(time_string)
   end
+
+  def to_db_hash
+    #  Получение доступа к аналогичному методу родителя
+    super
+  end
 end

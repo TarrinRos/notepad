@@ -18,4 +18,9 @@ class Link < Post
 
     [@url, @text, time_string]
   end
+
+  def to_db_hash
+    #  Получение доступа к аналогичному методу родителя
+    super
+  end
 end
