@@ -21,6 +21,18 @@ class Link < Post
 
   def to_db_hash
     #  Получение доступа к аналогичному методу родителя
-    super
+    super.merge(
+      {
+        'text': @text,
+        'url': @url
+      }
+    )
+  end
+
+  def load_data(data_hash)
+    super(data_hash) # сперва дергаем родительский метод для общих полей
+
+    # теперь прописываем свое специфичное поле
+    @url = data_hash['url']
   end
 end

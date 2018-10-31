@@ -26,6 +26,18 @@ class Task < Post
 
   def to_db_hash
    #  Получение доступа к аналогичному методу родителя
-   super
+   super.merge(
+          {
+            'text': @text,
+            'due_date': @due_date.to_s
+          }
+   )
+  end
+
+  def load_data(data_hash)
+    super(data_hash) # сперва дергаем родительский метод для общих полей
+
+    # теперь прописываем свое специфичное поле
+    @due_date = Date.parse(data_hash['due_date'])
   end
 end
