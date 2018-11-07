@@ -17,56 +17,54 @@ class Post
     #  todo: остальные специфичные поля должны заполнить дочерние классы
   end
 
-  def self.find(limit, type, id)
+  def self.find_all(limit, type)
     db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
-    if !id.nil?
-      db.results_as_hash = true # настройка соединения к базе, он результаты из базы преобразует в Руби хэши
-      # выполняем наш запрос, он возвращает массив результатов, в нашем случае из одного элемента
-      result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
-      # получаем единственный результат (если вернулся массив)
-      result = result[0] if result.is_a? Array
-      db.close
+    db.results_as_hash = false # настройка соединения к базе, он результаты из базы НЕ преобразует в Руби хэши
 
-      if result.empty?
-        puts "Такой id #{id} не найден в базе :("
-        return nil
-      else
-        # создаем с помощью нашего же метода create экземпляр поста,
-        # тип поста мы взяли из массива результатов [:type]
-        # номер этого типа в нашем массиве post_type нашли с помощью метода Array#find_index
-        post = create(result['type'])
+    # формируем запрос в базу с нужными условиями
+    query = "SELECT rowid, * FROM posts "
 
-        #   заполним этот пост содержимым
-        post.load_data(result)
+    query += "WHERE type = :type " unless type.nil? # если задан тип, надо добавить условие
+    query += "ORDER by rowid DESC " # и наконец сортировка - самые свежие в начале
 
-        # и вернем его
-        return post
-      end
+    query += "LIMIT :limit " unless limit.nil? # если задан лимит, надо добавить условие
 
-      # эта ветвь выполняется если не передан идентификатор
+    # готовим запрос в базу, как плов :)
+    statement = db.prepare query
+
+    statement.bind_param('type', type) unless type.nil? # загружаем в запрос тип вместо плейсхолдера, добавляем лук :)
+    statement.bind_param('limit', limit) unless limit.nil? # загружаем лимит вместо плейсхолдера, добавляем морковь :)
+
+    result = statement.execute! #(query) # выполняем
+    statement.close
+    db.close
+
+    return result
+  end
+
+  def self.find_by_id(id)
+    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
+    db.results_as_hash = true # настройка соединения к базе, он результаты из базы преобразует в Руби хэши
+    # выполняем наш запрос, он возвращает массив результатов, в нашем случае из одного элемента
+    result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
+    # получаем единственный результат (если вернулся массив)
+    result = result[0] if result.is_a? Array
+    db.close
+
+    if result.empty?
+      puts "Такой id #{id} не найден в базе :("
+      return nil
     else
+      # создаем с помощью нашего же метода create экземпляр поста,
+      # тип поста мы взяли из массива результатов [:type]
+      # номер этого типа в нашем массиве post_type нашли с помощью метода Array#find_index
+      post = create(result['type'])
 
-      db.results_as_hash = false # настройка соединения к базе, он результаты из базы НЕ преобразует в Руби хэши
+      #   заполним этот пост содержимым
+      post.load_data(result)
 
-      # формируем запрос в базу с нужными условиями
-      query = "SELECT rowid, * FROM posts "
-
-      query += "WHERE type = :type " unless type.nil? # если задан тип, надо добавить условие
-      query += "ORDER by rowid DESC " # и наконец сортировка - самые свежие в начале
-
-      query += "LIMIT :limit " unless limit.nil? # если задан лимит, надо добавить условие
-
-      # готовим запрос в базу, как плов :)
-      statement = db.prepare query
-
-      statement.bind_param('type', type) unless type.nil? # загружаем в запрос тип вместо плейсхолдера, добавляем лук :)
-      statement.bind_param('limit', limit) unless limit.nil? # загружаем лимит вместо плейсхолдера, добавляем морковь :)
-
-      result = statement.execute! #(query) # выполняем
-      statement.close
-      db.close
-
-      return result
+      # и вернем его
+      return post
     end
   end
 
