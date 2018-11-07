@@ -17,8 +17,12 @@ class Post
     #  todo: остальные специфичные поля должны заполнить дочерние классы
   end
 
+  def open_base
+    SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
+  end
+
   def self.find_all(limit, type)
-    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
+    db = open_base
     db.results_as_hash = false # настройка соединения к базе, он результаты из базы НЕ преобразует в Руби хэши
 
     # формируем запрос в базу с нужными условиями
@@ -43,7 +47,7 @@ class Post
   end
 
   def self.find_by_id(id)
-    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
+    db = open_base
     db.results_as_hash = true # настройка соединения к базе, он результаты из базы преобразует в Руби хэши
     # выполняем наш запрос, он возвращает массив результатов, в нашем случае из одного элемента
     result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
@@ -74,11 +78,11 @@ class Post
   end
 
   def read_from_console
-  #   todo
+    #   todo
   end
 
   def to_strings
-  #   todo
+    #   todo
   end
 
   def save(file_path)
