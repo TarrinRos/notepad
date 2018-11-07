@@ -18,11 +18,11 @@ class Post
   end
 
   def open_base
-    SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
+
   end
 
   def self.find_all(limit, type)
-    db = open_base
+    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
     db.results_as_hash = false # настройка соединения к базе, он результаты из базы НЕ преобразует в Руби хэши
 
     # формируем запрос в базу с нужными условиями
@@ -47,7 +47,7 @@ class Post
   end
 
   def self.find_by_id(id)
-    db = open_base
+    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
     db.results_as_hash = true # настройка соединения к базе, он результаты из базы преобразует в Руби хэши
     # выполняем наш запрос, он возвращает массив результатов, в нашем случае из одного элемента
     result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
