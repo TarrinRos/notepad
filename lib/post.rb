@@ -5,7 +5,7 @@ class Post
   @@SQLITE_DB_FILE = 'notepad'
 
   def self.post_types
-    {'Memo': Memo, 'Task': Task, 'Link': Link}
+    {'Memo' => Memo, 'Task' => Task, 'Link' => Link}
   end
 
   def self.create(type)
@@ -20,7 +20,7 @@ class Post
   def self.find(limit, type, id)
     db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
 
-    if !id.nil?
+    if id != 0
       find_by_id(db, id)
     else
       find_all(db, limit, type)
