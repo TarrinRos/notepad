@@ -17,12 +17,46 @@ class Post
     #  todo: остальные специфичные поля должны заполнить дочерние классы
   end
 
-  def open_base
+  def self.find(limit, type, id)
+    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
 
+    if !id.nil?
+      find_by_id(db, id)
+    else
+      find_all(db, limit, type)
+    end
   end
 
-  def self.find_all(limit, type)
-    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
+  def self.find_by_id(db, id)
+    db.results_as_hash = true # настройка соединения к базе, он результаты из базы преобразует в Руби хэши
+
+    # выполняем наш запрос, он возвращает массив результатов, в нашем случае из одного элемента
+    result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
+
+    # получаем единственный результат (если вернулся массив)
+    result = result[0] if result.is_a? Array
+
+    db.close
+
+    if result.empty?
+      puts "Такой id #{id} не найден в базе :("
+      return nil
+    else
+      # создаем с помощью нашего же метода create экземпляр поста,
+      # тип поста мы взяли из массива результатов [:type]
+      # номер этого типа в нашем массиве post_type нашли с помощью метода Array#find_index
+      post = create(result['type'])
+
+      #   заполним этот пост содержимым
+      post.load_data(result)
+
+      # и вернем его
+      return post
+    end
+  end
+
+  def self.find_all(db, limit, type)
+
     db.results_as_hash = false # настройка соединения к базе, он результаты из базы НЕ преобразует в Руби хэши
 
     # формируем запрос в базу с нужными условиями
@@ -44,32 +78,6 @@ class Post
     db.close
 
     return result
-  end
-
-  def self.find_by_id(id)
-    db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
-    db.results_as_hash = true # настройка соединения к базе, он результаты из базы преобразует в Руби хэши
-    # выполняем наш запрос, он возвращает массив результатов, в нашем случае из одного элемента
-    result = db.execute("SELECT * FROM posts WHERE rowid = ?", id)
-    # получаем единственный результат (если вернулся массив)
-    result = result[0] if result.is_a? Array
-    db.close
-
-    if result.empty?
-      puts "Такой id #{id} не найден в базе :("
-      return nil
-    else
-      # создаем с помощью нашего же метода create экземпляр поста,
-      # тип поста мы взяли из массива результатов [:type]
-      # номер этого типа в нашем массиве post_type нашли с помощью метода Array#find_index
-      post = create(result['type'])
-
-      #   заполним этот пост содержимым
-      post.load_data(result)
-
-      # и вернем его
-      return post
-    end
   end
 
   def initialize
@@ -111,7 +119,7 @@ class Post
         to_db_hash.keys.join(', ') + # все поля, перечисленные через запятую
         ") " +
         " VALUES ( " +
-        ('?,'*to_db_hash.keys.size).chomp(',') + # строка из заданного числа _плейсхолдеров_ ?,?,?...
+        ('?,' * to_db_hash.keys.size).chomp(',') + # строка из заданного числа _плейсхолдеров_ ?,?,?...
         ")",
       to_db_hash.values # массив значений хэша, которые будут вставлены в запрос вместо _плейсхолдеров_
     )
