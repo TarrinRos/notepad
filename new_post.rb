@@ -36,3 +36,5 @@ entry.read_from_console
 id = entry.save_to_db
 
 puts "Ура! Запись сохранена. id = #{id}"
+
+#no such table: posts SQLite3::SQLException

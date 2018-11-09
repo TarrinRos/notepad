@@ -20,10 +20,15 @@ class Post
   def self.find(limit, type, id)
     db = SQLite3::Database.open(@@SQLITE_DB_FILE) # открываем "соединение" к базе SQLite
 
-    if id != 0
+    begin
+    if !id.nil?
       find_by_id(db, id)
     else
       find_all(db, limit, type)
+    end
+
+    rescue SQLite3::SQLException
+      abort 'Базы данных не существует. Проверьте правильнось пути или наличия БД'
     end
   end
 
@@ -114,6 +119,7 @@ class Post
     db.results_as_hash = true
 
     # запрос к базе на вставку новой записи в соответствии с хэшом, сформированным дочерним классом to_db_hash
+    begin
     db.execute(
       "INSERT INTO posts (" +
         to_db_hash.keys.join(', ') + # все поля, перечисленные через запятую
@@ -131,6 +137,10 @@ class Post
 
     # возвращаем идентификатор записи в базе
     return insert_row_id
+
+    rescue SQLite3::SQLException
+      abort 'Базы данных не существует. Проверьте правильнось пути или наличия БД'
+    end
   end
 
   def to_db_hash
